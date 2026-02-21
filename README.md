@@ -1,6 +1,5 @@
-路线模拟与位置模拟
+路线模拟，位置模拟，导航模拟
 
-我的项目遵循了开源协议，暂时我没有得到任何好处，所以我不要来骂我，本来想关闭该项目，但是为了一些小人不值得
 
 
 
@@ -42,6 +41,8 @@ https://github.com/ZCShou/GoGoGo
 https://github.com/Lerist/FakeLocation
 
 https://github.com/ella8192/Portal
+
+https://github.com/Hilaver/MockGPS
 
 赞赏作者：
 
