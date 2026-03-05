@@ -179,7 +179,7 @@ class ServiceGo : Service() {
                 GoUtils.DisplayToast(applicationContext, "请授予悬浮窗权限")
             }
             val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-            val joystickEnabledPref = prefs.getBoolean("setting_joystick_enabled", true)
+            val joystickEnabledPref = prefs.getBoolean("setting_joystick_enabled", false)
             initJoyStick()
             if (joystickEnabledPref) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
@@ -359,7 +359,7 @@ class ServiceGo : Service() {
                 }
             } catch (_: Exception) {}
             mCurAlt = intent.getDoubleExtra(LocationPickerActivity.ALT_MSG_ID, DEFAULT_ALT)
-            val joystickEnabled = intent.getBooleanExtra(EXTRA_JOYSTICK_ENABLED, true)
+            val joystickEnabled = intent.getBooleanExtra(EXTRA_JOYSTICK_ENABLED, false)
             mSpeed = intent.getFloatExtra(EXTRA_ROUTE_SPEED, mSpeed.toFloat()).toDouble() / 3.6
             val routeArray = intent.getDoubleArrayExtra(EXTRA_ROUTE_POINTS)
             if (routeArray != null && routeArray.size >= 2) {
