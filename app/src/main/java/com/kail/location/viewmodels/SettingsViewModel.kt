@@ -28,7 +28,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         const val KEY_LAT_OFFSET = "setting_lat_max_offset"
         const val KEY_LON_OFFSET = "setting_lon_max_offset"
         const val KEY_RANDOM_OFFSET = "setting_random_offset"
-        const val KEY_LOG_OFF = "setting_log_off"
+        const val KEY_LOG_ENABLED = "setting_log_enabled"
         const val KEY_HISTORY_EXPIRATION = "setting_history_expiration"
         const val KEY_BAIDU_MAP_KEY = "setting_baidu_map_key"
     }
@@ -69,9 +69,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     /** 随机偏移开关偏好的状态流。 */
     val randomOffset: StateFlow<Boolean> = _randomOffset.asStateFlow()
 
-    private val _logOff = MutableStateFlow(prefs.getBoolean(KEY_LOG_OFF, false))
-    /** 关闭日志开关偏好的状态流。 */
-    val logOff: StateFlow<Boolean> = _logOff.asStateFlow()
+    private val _logEnabled = MutableStateFlow(prefs.getBoolean(KEY_LOG_ENABLED, false))
+    /** 启用日志开关偏好的状态流。 */
+    val logEnabled: StateFlow<Boolean> = _logEnabled.asStateFlow()
 
     private val _historyExpiration = MutableStateFlow(prefs.getString(KEY_HISTORY_EXPIRATION, "7.0") ?: "7.0")
     /** 历史记录保留天数偏好的状态流。 */
@@ -91,7 +91,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             KEY_LAT_OFFSET -> _latOffset.value = sharedPreferences.getString(key, "10.0") ?: "10.0"
             KEY_LON_OFFSET -> _lonOffset.value = sharedPreferences.getString(key, "10.0") ?: "10.0"
             KEY_RANDOM_OFFSET -> _randomOffset.value = sharedPreferences.getBoolean(key, false)
-            KEY_LOG_OFF -> _logOff.value = sharedPreferences.getBoolean(key, false)
+            KEY_LOG_ENABLED -> _logEnabled.value = sharedPreferences.getBoolean(key, true)
             KEY_HISTORY_EXPIRATION -> _historyExpiration.value = sharedPreferences.getString(key, "7.0") ?: "7.0"
         }
     }

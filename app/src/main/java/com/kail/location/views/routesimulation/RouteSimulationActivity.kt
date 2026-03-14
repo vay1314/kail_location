@@ -26,6 +26,7 @@ import android.hardware.SensorEventListener
 import com.baidu.mapapi.map.MyLocationConfiguration
 import com.baidu.mapapi.map.BitmapDescriptorFactory
 import com.kail.location.service.ServiceGo
+import com.kail.location.utils.KailLog
 import androidx.core.content.ContextCompat
 
 /**
@@ -58,7 +59,7 @@ class RouteSimulationActivity : BaseActivity(), SensorEventListener {
         mBaiduMap = mMapView?.map
         mBaiduMap?.isMyLocationEnabled = true
         initMapLocation()
-        android.util.Log.i("RouteSimulationActivity", "Map and location initialized")
+        KailLog.i(this, "RouteSimulationActivity", "Map and location initialized")
         
         var version = "v1.0.0"
         try {
@@ -162,10 +163,12 @@ class RouteSimulationActivity : BaseActivity(), SensorEventListener {
                                 val invalid = (Math.abs(lat) < 0.000001 && Math.abs(lon) < 0.000001) || (lat == 4.9E-324 || lon == 4.9E-324)
                                 if (!invalid) {
                                     val ll = LatLng(lat, lon)
-                                    mBaiduMap?.animateMapStatus(com.baidu.mapapi.map.MapStatusUpdateFactory.newLatLng(ll))
-                                    android.util.Log.i("RouteSimulationActivity", "Animate to current $ll")
+                                    val builder = com.baidu.mapapi.map.MapStatus.Builder()
+                                    builder.target(ll).zoom(18.0f)
+                                    mBaiduMap?.animateMapStatus(com.baidu.mapapi.map.MapStatusUpdateFactory.newMapStatus(builder.build()))
+                                    KailLog.i(this@RouteSimulationActivity, "RouteSimulationActivity", "Animate to current $ll")
                                 } else {
-                                    android.util.Log.w("RouteSimulationActivity", "Current location unavailable")
+                                    KailLog.w(this@RouteSimulationActivity, "RouteSimulationActivity", "Current location unavailable")
                                 }
                             },
                             currentLatLng = run {

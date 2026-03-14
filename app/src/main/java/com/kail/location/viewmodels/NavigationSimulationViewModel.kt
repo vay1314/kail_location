@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import android.content.Intent
 import androidx.core.content.ContextCompat
-import android.util.Log
+import com.kail.location.utils.KailLog
 import com.kail.location.models.UpdateInfo
 import com.kail.location.utils.UpdateChecker
 import android.content.Context
@@ -211,27 +211,54 @@ class NavigationSimulationViewModel(application: Application) : AndroidViewModel
         })
 
         routePlanSearch.setOnGetRoutePlanResultListener(object : OnGetRoutePlanResultListener {
-            override fun onGetWalkingRouteResult(p0: WalkingRouteResult?) {}
-            override fun onGetTransitRouteResult(p0: TransitRouteResult?) {}
-            override fun onGetMassTransitRouteResult(p0: MassTransitRouteResult?) {}
-            override fun onGetDrivingRouteResult(result: DrivingRouteResult?) {
+            override fun onGetWalkingRouteResult(result: WalkingRouteResult?) {
                 _isLoading.value = false
-                if (result == null || result.error != SearchResult.ERRORNO.NO_ERROR) {
-                    Log.e("NavSimVM", "Route plan failed: ${result?.error}")
-                    return
-                }
-                if (result.routeLines.isNotEmpty()) {
-                    val allRoutes = result.routeLines.map { it.allStep.flatMap { step -> step.wayPoints } }
-                    if (_isMultiRoute.value && allRoutes.size > 1) {
-                        _candidateRoutes.value = allRoutes
-                    } else {
-                        startSimulationService(allRoutes.first())
+                if (result?.error == SearchResult.ERRORNO.NO_ERROR && result.routeLines.isNotEmpty()) {
+                    val route = result.routeLines[0]
+                    val points = mutableListOf<LatLng>()
+                    route.allStep.forEach { step ->
+                        points.addAll(step.wayPoints)
                     }
+                    _candidateRoutes.value = listOf(points)
+                } else {
+                    KailLog.e(getApplication(), "NavSimVM", "Route plan failed: ${result?.error}")
                 }
             }
-            override fun onGetIndoorRouteResult(p0: IndoorRouteResult?) {}
-            override fun onGetBikingRouteResult(p0: BikingRouteResult?) {}
-            override fun onGetIntegralRouteResult(p0: IntegralRouteResult?) {}
+
+            override fun onGetTransitRouteResult(result: TransitRouteResult?) {}
+            override fun onGetMassTransitRouteResult(result: MassTransitRouteResult?) {}
+            override fun onGetDrivingRouteResult(result: DrivingRouteResult?) {
+                _isLoading.value = false
+                if (result?.error == SearchResult.ERRORNO.NO_ERROR && result.routeLines.isNotEmpty()) {
+                    _candidateRoutes.value = result.routeLines.map { line ->
+                        val points = mutableListOf<LatLng>()
+                        line.allStep.forEach { step ->
+                            points.addAll(step.wayPoints)
+                        }
+                        points
+                    }
+                } else {
+                    KailLog.e(getApplication(), "NavSimVM", "Route plan failed: ${result?.error}")
+                }
+            }
+
+            override fun onGetIndoorRouteResult(result: IndoorRouteResult?) {}
+            override fun onGetBikingRouteResult(result: BikingRouteResult?) {
+                _isLoading.value = false
+                if (result?.error == SearchResult.ERRORNO.NO_ERROR && result.routeLines.isNotEmpty()) {
+                    _candidateRoutes.value = result.routeLines.map { line ->
+                        val points = mutableListOf<LatLng>()
+                        line.allStep.forEach { step ->
+                            points.addAll(step.wayPoints)
+                        }
+                        points
+                    }
+                } else {
+                    KailLog.e(getApplication(), "NavSimVM", "Route plan failed: ${result?.error}")
+                }
+            }
+
+            override fun onGetIntegralRouteResult(result: IntegralRouteResult?) {}
         })
     }
     

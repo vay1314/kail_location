@@ -44,7 +44,7 @@ fun SettingsScreen(
     val randomOffset by viewModel.randomOffset.collectAsState()
     val latOffset by viewModel.latOffset.collectAsState()
     val lonOffset by viewModel.lonOffset.collectAsState()
-    val logOff by viewModel.logOff.collectAsState()
+    val logEnabled by viewModel.logEnabled.collectAsState()
     val historyExpiration by viewModel.historyExpiration.collectAsState()
     val baiduMapKey by viewModel.baiduMapKey.collectAsState()
 
@@ -153,9 +153,10 @@ fun SettingsScreen(
             )
 
             SwitchPreference(
-                title = "关闭日志", // setting_log_off
-                checked = logOff,
-                onCheckedChange = { viewModel.updateBooleanPreference(SettingsViewModel.KEY_LOG_OFF, it) }
+                title = "启用日志",
+                checked = logEnabled,
+                onCheckedChange = { viewModel.updateBooleanPreference(SettingsViewModel.KEY_LOG_ENABLED, it) },
+                summary = "控制控制台输出与本地文件保存"
             )
 
             EditTextPreference(

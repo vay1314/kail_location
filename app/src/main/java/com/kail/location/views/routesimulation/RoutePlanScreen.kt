@@ -28,7 +28,7 @@ import com.baidu.mapapi.map.PolylineOptions
 import com.baidu.mapapi.map.MapStatusUpdateFactory
 import com.baidu.mapapi.map.MapStatus
 import com.baidu.mapapi.map.Overlay
-import android.util.Log
+import com.kail.location.utils.KailLog
 import android.graphics.Color as AndroidColor
 import androidx.preference.PreferenceManager
 import com.kail.location.utils.MapUtils
@@ -128,7 +128,8 @@ fun RoutePlanScreen(
                         com.baidu.mapapi.map.BitmapDescriptorFactory.fromResource(R.drawable.ic_position)
                     )
                 )
-                Log.i("RoutePlanScreen", "Map initialized")
+                KailLog.i(context, "RoutePlanScreen", "Map initialized")
+                map.setMapStatus(MapStatusUpdateFactory.zoomTo(15f))
                 
                 map.setOnMapStatusChangeListener(object : BaiduMap.OnMapStatusChangeListener {
                     override fun onMapStatusChangeStart(status: MapStatus) {
@@ -192,14 +193,14 @@ fun RoutePlanScreen(
                         
                         endPoint = "${target.latitude},${target.longitude}"
                         currentAnchor = target
-                        Log.i("RoutePlanScreen", "Finalize waypoint ${waypoints.size} -> $target")
+                        KailLog.i(context, "RoutePlanScreen", "Finalize waypoint ${waypoints.size} -> $target")
                     }
                 })
             } else {
-                Log.e("RoutePlanScreen", "MapView.map is null")
+                KailLog.e(context, "RoutePlanScreen", "MapView.map is null")
             }
         } catch (e: Exception) {
-            Log.e("RoutePlanScreen", "Map init error", e)
+            KailLog.e(context, "RoutePlanScreen", "Map init error: ${e.message}")
         }
     }
 
@@ -210,7 +211,7 @@ fun RoutePlanScreen(
                 val ll = currentLatLng
                 if (!hasCentered && ll != null && !(ll.latitude == 0.0 && ll.longitude == 0.0)) {
                     map.animateMapStatus(MapStatusUpdateFactory.newLatLng(ll))
-                    Log.i("RoutePlanScreen", "Center to current $ll")
+                    KailLog.i(context, "RoutePlanScreen", "Center to current $ll")
                     hasCentered = true
                 }
                 
@@ -229,7 +230,7 @@ fun RoutePlanScreen(
                 }
             }
         } catch (e: Exception) {
-            Log.e("RoutePlanScreen", "Map center/marker error", e)
+            KailLog.e(context, "RoutePlanScreen", "Map center/marker error: ${e.message}")
         }
     }
 
@@ -399,7 +400,7 @@ fun RoutePlanScreen(
                 when (markingPhase) {
                     MarkingPhase.Preview -> {
                         Image(
-                            painter = painterResource(id = R.drawable.icon_gcoding),
+                            painter = painterResource(id = R.drawable.ic_position),
                             contentDescription = null,
                             modifier = Modifier
                                 .align(Alignment.Center)
@@ -409,7 +410,7 @@ fun RoutePlanScreen(
                     }
                     MarkingPhase.Active -> {
                         Image(
-                            painter = painterResource(id = R.drawable.icon_gcoding),
+                            painter = painterResource(id = R.drawable.ic_position),
                             contentDescription = null,
                             modifier = Modifier
                                 .align(Alignment.Center)
@@ -491,16 +492,18 @@ fun RoutePlanScreen(
                                     currentAnchor = null
                                 }
                             }
-                            Log.i("RoutePlanScreen", "Undo last waypoint, now size=${waypoints.size}")
+                            KailLog.i(context, "RoutePlanScreen", "Undo last waypoint, now size=${waypoints.size}")
                         } catch (e: Exception) {
-                            Log.e("RoutePlanScreen", "Undo error", e)
+                            KailLog.e(context, "RoutePlanScreen", "Undo error: ${e.message}")
                         }
                     },
                     modifier = Modifier.alpha(if (waypoints.isNotEmpty()) 1f else 0f),
                     containerColor = Color.White, contentColor = MaterialTheme.colorScheme.primary) {
                         Icon(painter = painterResource(id = R.drawable.ic_left), contentDescription = null)
                     }
-                    SmallFloatingActionButton(
+
+                    // Switch Mark Mode
+                    FloatingActionButton(
                         onClick = {
                             try {
                                 val map = mapView?.map
@@ -527,26 +530,32 @@ fun RoutePlanScreen(
                                         markingPhase = MarkingPhase.Idle
                                     }
                                 }
-                                Log.i("RoutePlanScreen", "Marking phase ${markingPhase}")
+                                KailLog.i(context, "RoutePlanScreen", "Marking phase ${markingPhase}")
                             } catch (e: Exception) {
-                                Log.e("RoutePlanScreen", "Toggle mark mode error", e)
+                                KailLog.e(context, "RoutePlanScreen", "Toggle mark mode error: ${e.message}")
                             }
                         },
-                        containerColor = Color.White,
-                        contentColor = MaterialTheme.colorScheme.primary
+                        containerColor = if (markingPhase != MarkingPhase.Idle) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        shape = CircleShape
                     ) {
-                        Icon(painter = painterResource(id = R.drawable.icon_gcoding), contentDescription = null)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_position),
+                            contentDescription = "Mark Mode",
+                            tint = if (markingPhase != MarkingPhase.Idle) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                        )
                     }
+
+                    // Confirm and Save
                     FloatingActionButton(
                         onClick = {
                             try {
                                 if (waypoints.size >= 2) {
                                     viewModel.saveRoute(waypoints.toList())
-                                    Log.i("RoutePlanScreen", "Saved route with ${waypoints.size} points via ViewModel")
+                                    KailLog.i(context, "RoutePlanScreen", "Saved route with ${waypoints.size} points via ViewModel")
                                 }
                                 onConfirmClick()
                             } catch (e: Exception) {
-                                Log.e("RoutePlanScreen", "Save route error", e)
+                                KailLog.e(context, "RoutePlanScreen", "Save route error: ${e.message}")
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.secondary

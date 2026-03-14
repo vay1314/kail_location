@@ -24,6 +24,7 @@ import android.util.Log
 import com.kail.location.views.locationpicker.LocationPickerActivity
 import com.kail.location.R
 import com.kail.location.utils.GoUtils
+import com.kail.location.utils.KailLog
 import com.kail.location.views.joystick.JoyStick
 import kotlin.math.abs
 import kotlin.math.cos
@@ -144,37 +145,37 @@ class ServiceGo : Service() {
      */
     override fun onCreate() {
         super.onCreate()
-        Log.i("ServiceGo", "ServiceGo: onCreate started")
+        KailLog.i(this, "ServiceGo", "onCreate started")
         
         // 1. Init Notification & Foreground Service
         try {
-            Log.i("ServiceGo", "ServiceGo: 1. initNotification")
+            KailLog.i(this, "ServiceGo", "1. initNotification")
             // Must call startForeground immediately
             initNotification()
         } catch (e: Throwable) {
-            Log.e("ServiceGo", "ServiceGo: Error in initNotification", e)
+            KailLog.e(this, "ServiceGo", "Error in initNotification: ${e.message}")
             // Continue execution, don't stopSelf yet, maybe we can survive or at least log more
         }
 
         // 2. Init Location Manager & Providers
         try {
-            Log.i("ServiceGo", "ServiceGo: 2. init LocationManager")
+            KailLog.i(this, "ServiceGo", "2. init LocationManager")
             mLocManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         } catch (e: Throwable) {
-            Log.e("ServiceGo", "ServiceGo: Error in LocationManager init", e)
+            KailLog.e(this, "ServiceGo", "Error in LocationManager init: ${e.message}")
         }
 
         // 3. Init Location Handler
         try {
-            Log.i("ServiceGo", "ServiceGo: 3. initGoLocation")
+            KailLog.i(this, "ServiceGo", "3. initGoLocation")
             initGoLocation()
         } catch (e: Throwable) {
-            Log.e("ServiceGo", "ServiceGo: Error in initGoLocation", e)
+            KailLog.e(this, "ServiceGo", "Error in initGoLocation: ${e.message}")
         }
             
         // 4. Init JoyStick
         try {
-            Log.i("ServiceGo", "ServiceGo: 4. initJoyStick")
+            KailLog.i(this, "ServiceGo", "4. initJoyStick")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
                 GoUtils.DisplayToast(applicationContext, "请授予悬浮窗权限")
             }
@@ -189,12 +190,12 @@ class ServiceGo : Service() {
                 mJoyStick.hide()
             }
         } catch (e: Throwable) {
-            Log.e("ServiceGo", "ServiceGo: Error initializing JoyStick", e)
+            KailLog.e(this, "ServiceGo", "Error initializing JoyStick: ${e.message}")
             GoUtils.DisplayToast(applicationContext, "悬浮窗初始化失败: ${e.message}")
         }
 
         broadcastStatus()
-        Log.i("ServiceGo", "ServiceGo: onCreate finished")
+        KailLog.i(this, "ServiceGo", "onCreate finished")
     }
 
     /**
@@ -219,9 +220,9 @@ class ServiceGo : Service() {
                                 mJoyStick.setRoutePauseState(true)
                             }
                             broadcastStatus()
-                            Log.i("ServiceGo", "ServiceGo: paused simulation (isStop=true)")
+                            KailLog.log(this, "ServiceGo", "Paused simulation (isStop=true)", isHighFrequency = false)
                         } catch (e: Exception) {
-                            Log.e("ServiceGo", "ServiceGo: pause error", e)
+                            KailLog.log(this, "ServiceGo", "Pause error: ${e.message}", isHighFrequency = false)
                         }
                         return super.onStartCommand(intent, flags, startId)
                     }
@@ -232,9 +233,9 @@ class ServiceGo : Service() {
                                 mJoyStick.setRoutePauseState(false)
                             }
                             broadcastStatus()
-                            Log.i("ServiceGo", "ServiceGo: resumed simulation (isStop=false)")
+                            KailLog.log(this, "ServiceGo", "Resumed simulation (isStop=false)", isHighFrequency = false)
                         } catch (e: Exception) {
-                            Log.e("ServiceGo", "ServiceGo: resume error", e)
+                            KailLog.log(this, "ServiceGo", "Resume error: ${e.message}", isHighFrequency = false)
                         }
                         return super.onStartCommand(intent, flags, startId)
                     }
@@ -242,9 +243,9 @@ class ServiceGo : Service() {
                         try {
                             stopSelf()
                             broadcastStatus() // Technically stopSelf calls onDestroy, but explicit broadcast helps
-                            Log.i("ServiceGo", "ServiceGo: stopSelf via control action")
+                            KailLog.i(this, "ServiceGo", "stopSelf via control action")
                         } catch (e: Exception) {
-                            Log.e("ServiceGo", "ServiceGo: stop error", e)
+                            KailLog.e(this, "ServiceGo", "stop error: ${e.message}")
                         }
                         return super.onStartCommand(intent, flags, startId)
                     }
@@ -282,10 +283,10 @@ class ServiceGo : Service() {
                                 mCurLat = a.second + dLatDeg * f
                                 mCurBea = GeoMath.bearingDegrees(a.first, a.second, b.first, b.second)
                                 updateJoystickStatus()
-                                Log.i("ServiceGo", "ServiceGo: seek to ratio=$ratio index=$mRouteIndex progress=$mSegmentProgressMeters")
+                                KailLog.i(this, "ServiceGo", "seek to ratio=$ratio index=$mRouteIndex progress=$mSegmentProgressMeters")
                             }
                         } catch (e: Exception) {
-                            Log.e("ServiceGo", "ServiceGo: seek error", e)
+                            KailLog.e(this, "ServiceGo", "seek error: ${e.message}")
                         }
                         return super.onStartCommand(intent, flags, startId)
                     }
@@ -297,18 +298,18 @@ class ServiceGo : Service() {
                                 portalStartIfNeeded()
                                 portalSend("set_speed") { putFloat("speed", mSpeed.toFloat()) }
                             }
-                            Log.i("ServiceGo", "ServiceGo: speed updated to km/h=$kmh m/s=$mSpeed")
+                            KailLog.i(this, "ServiceGo", "speed updated to km/h=$kmh m/s=$mSpeed")
                         } catch (e: Exception) {
-                            Log.e("ServiceGo", "ServiceGo: set_speed error", e)
+                            KailLog.e(this, "ServiceGo", "set_speed error: ${e.message}")
                         }
                         return super.onStartCommand(intent, flags, startId)
                     }
                     CONTROL_SET_SPEED_FLUCTUATION -> {
                         try {
                             speedFluctuation = intent.getBooleanExtra(EXTRA_SPEED_FLUCTUATION, speedFluctuation)
-                            Log.i("ServiceGo", "ServiceGo: speedFluctuation updated to $speedFluctuation")
+                            KailLog.i(this, "ServiceGo", "speedFluctuation updated to $speedFluctuation")
                         } catch (e: Exception) {
-                            Log.e("ServiceGo", "ServiceGo: set_speed_fluctuation error", e)
+                            KailLog.e(this, "ServiceGo", "set_speed_fluctuation error: ${e.message}")
                         }
                         return super.onStartCommand(intent, flags, startId)
                     }
@@ -331,7 +332,7 @@ class ServiceGo : Service() {
             try {
                 initNotification()
             } catch (e: Exception) {
-                Log.e("ServiceGo", "ServiceGo: Error in onStartCommand initNotification", e)
+                KailLog.e(this, "ServiceGo", "Error in onStartCommand initNotification: ${e.message}")
             }
         }
 
@@ -384,7 +385,7 @@ class ServiceGo : Service() {
                 calculateRouteDistances()
             }
             
-            Log.i("ServiceGo", "ServiceGo: onStartCommand received lat=$mCurLat, lng=$mCurLng, runMode=$mRunMode")
+            KailLog.i(this, "ServiceGo", "onStartCommand received lat=$mCurLat, lng=$mCurLng, runMode=$mRunMode")
 
             // Always ensure providers so third-party SDKs (e.g., Baidu) can receive GPS/Network updates
             if (mRunMode != "root") {
@@ -420,7 +421,7 @@ class ServiceGo : Service() {
                         mJoyStick.hide()
                     }
                 } catch (e: Exception) {
-                    Log.e("ServiceGo", "ServiceGo: Error setting current position or showing joystick", e)
+                    KailLog.e(this, "ServiceGo", "Error setting current position or showing joystick: ${e.message}")
                 }
             }
         }
@@ -433,7 +434,7 @@ class ServiceGo : Service() {
      * 清理资源、广播接收器并停止前台服务。
      */
     override fun onDestroy() {
-        Log.i("ServiceGo", "ServiceGo: onDestroy started")
+        KailLog.i(this, "ServiceGo", "onDestroy started")
         try {
             val intent = Intent(ACTION_STATUS_CHANGED)
             intent.putExtra(EXTRA_IS_SIMULATING, false)
@@ -470,11 +471,11 @@ class ServiceGo : Service() {
                 stopForeground(true)
             }
         } catch (e: Exception) {
-            Log.e("ServiceGo", "ServiceGo: Error in onDestroy", e)
+            KailLog.e(this, "ServiceGo", "Error in onDestroy: ${e.message}")
         }
 
         super.onDestroy()
-        Log.i("ServiceGo", "ServiceGo: onDestroy finished")
+        KailLog.i(this, "ServiceGo", "onDestroy finished")
     }
 
     /**
@@ -625,10 +626,10 @@ class ServiceGo : Service() {
                     // The loop is only truly stopped in onDestroy.
                     sendEmptyMessage(HANDLER_MSG_ID)
                 } catch (e: InterruptedException) {
-                    Log.e("ServiceGo", "SERVICEGO: ERROR - handleMessage interrupted")
+                    KailLog.e(this@ServiceGo, "ServiceGo", "handleMessage interrupted: ${e.message}")
                     Thread.currentThread().interrupt()
                 } catch (e: Exception) {
-                    Log.e("ServiceGo", "SERVICEGO: ERROR - handleMessage exception", e)
+                    KailLog.e(this@ServiceGo, "ServiceGo", "handleMessage exception: ${e.message}")
                     // 防止死循环崩溃，稍微延迟后再发送消息
                     if (!isStop) {
                          sendEmptyMessageDelayed(HANDLER_MSG_ID, 1000)
@@ -662,7 +663,7 @@ class ServiceGo : Service() {
             removeTestProviderGPS()
             addTestProviderGPS()
         } catch (e: Throwable) {
-            Log.e("ServiceGo", "ServiceGo: Error ensuring providers", e)
+            KailLog.e(this, "ServiceGo", "Error ensuring providers: ${e.message}")
         }
     }
 
@@ -674,22 +675,22 @@ class ServiceGo : Service() {
     private fun portalInitIfNeeded(): Boolean {
         if (portalRandomKey != null) return true
         val rely = Bundle()
-        Log.i("ServiceGo", "ServiceGo: sending exchange_key...")
+        KailLog.i(this, "ServiceGo", "sending exchange_key...")
         val ok = kotlin.runCatching {
             mLocManager.sendExtraCommand(PORTAL_PROVIDER, "exchange_key", rely)
         }.onFailure {
-            Log.e("ServiceGo", "ServiceGo: sendExtraCommand exception", it)
+            KailLog.e(this, "ServiceGo", "sendExtraCommand exception: ${it.message}")
         }.getOrDefault(false)
         if (!ok) {
-            Log.e("ServiceGo", "ServiceGo: exchange_key failed (sendExtraCommand returned false)")
+            KailLog.e(this, "ServiceGo", "exchange_key failed (sendExtraCommand returned false)")
             return false
         }
         val key = rely.getString("key")
         if (key.isNullOrBlank()) {
-            Log.e("ServiceGo", "ServiceGo: exchange_key failed (key is null/blank)")
+            KailLog.e(this, "ServiceGo", "exchange_key failed (key is null/blank)")
             return false
         }
-        Log.i("ServiceGo", "ServiceGo: exchange_key success, key=$key")
+        KailLog.i(this, "ServiceGo", "exchange_key success, key=$key")
         portalRandomKey = key
         return true
     }
@@ -704,13 +705,13 @@ class ServiceGo : Service() {
         val rely = Bundle()
         rely.putString("command_id", commandId)
         rely.block()
-        Log.i("ServiceGo", "PORTAL发送：cmd=$commandId，内容=$rely")
+        KailLog.i(this, "ServiceGo", "PORTAL发送：cmd=$commandId，内容=$rely",isHighFrequency = true)
         val ok = kotlin.runCatching {
             mLocManager.sendExtraCommand(PORTAL_PROVIDER, key, rely)
         }.onFailure {
-             Log.e("ServiceGo", "ServiceGo: portalSend exception command=$commandId", it)
+             KailLog.e(this, "ServiceGo", "portalSend exception command=$commandId: ${it.message}")
         }.getOrDefault(false)
-        Log.i("ServiceGo", "PORTAL结果：cmd=$commandId，ok=$ok")
+        KailLog.i(this, "ServiceGo", "PORTAL结果：cmd=$commandId，ok=$ok",isHighFrequency = true)
         return ok
     }
 
@@ -723,7 +724,7 @@ class ServiceGo : Service() {
     private fun portalStartIfNeeded(): Boolean {
         if (portalStarted) return true
         if (!portalInitIfNeeded()) {
-            Log.e("ServiceGo", "ServiceGo: portalStartIfNeeded failed because init failed")
+            KailLog.e(this, "ServiceGo", "portalStartIfNeeded failed because init failed")
             return false
         }
         val ok = portalSend("start") {
@@ -732,12 +733,12 @@ class ServiceGo : Service() {
             putFloat("accuracy", 1.0f)
         }
         if (ok) {
-            Log.i("ServiceGo", "ServiceGo: portal start command success")
+            KailLog.i(this, "ServiceGo", "portal start command success")
             portalStarted = true
             portalSend("set_step_enabled") { putBoolean("enabled", stepEnabledCache) }
             portalSend("set_step_cadence") { putFloat("cadence", stepFreqCache.toFloat()) }
         } else {
-            Log.e("ServiceGo", "ServiceGo: portal start command failed")
+            KailLog.e(this, "ServiceGo", "portal start command failed")
         }
         return ok
     }
@@ -748,7 +749,7 @@ class ServiceGo : Service() {
      */
     private fun portalUpdateOnce() {
         if (!portalStartIfNeeded()) {
-            Log.e("ServiceGo", "ServiceGo: portalUpdateOnce failed because start failed")
+            KailLog.e(this, "ServiceGo", "portalUpdateOnce failed because start failed")
             return
         }
         portalSend("set_altitude") { putDouble("altitude", mCurAlt) }
@@ -768,6 +769,9 @@ class ServiceGo : Service() {
     private fun portalTick() {
         if (!portalStartIfNeeded()) return
         val speedToSet = if (isStop) 0.0f else mSpeed.toFloat()
+        
+        KailLog.log(this, "ServiceGo", "Portal Tick: lat=$mCurLat, lng=$mCurLng, speed=$speedToSet", isHighFrequency = true)
+
         portalSend("set_speed") { putFloat("speed", speedToSet) }
         portalSend("set_bearing") { putDouble("bearing", mCurBea.toDouble()) }
         portalSend("update_location") {
@@ -923,7 +927,7 @@ class ServiceGo : Service() {
                 mLocManager.removeTestProvider(LocationManager.GPS_PROVIDER)
             }
         } catch (e: Exception) {
-            Log.e("ServiceGo", "SERVICEGO: ERROR - removeTestProviderGPS")
+            KailLog.e(this, "ServiceGo", "removeTestProviderGPS error: ${e.message}")
         }
     }
 
@@ -951,7 +955,7 @@ class ServiceGo : Service() {
                 mLocManager.setTestProviderEnabled(LocationManager.GPS_PROVIDER, true)
             }
         } catch (e: Exception) {
-            Log.e("ServiceGo", "SERVICEGO: ERROR - addTestProviderGPS")
+            KailLog.e(this, "ServiceGo", "addTestProviderGPS error: ${e.message}")
         }
     }
 
@@ -984,7 +988,7 @@ class ServiceGo : Service() {
 
             mLocManager.setTestProviderLocation(LocationManager.GPS_PROVIDER, loc)
         } catch (e: Exception) {
-            Log.e("ServiceGo", "SERVICEGO: ERROR - setLocationGPS", e)
+            KailLog.e(this, "ServiceGo", "setLocationGPS error: ${e.message}")
         }
     }
 
@@ -998,7 +1002,7 @@ class ServiceGo : Service() {
                 mLocManager.removeTestProvider(LocationManager.NETWORK_PROVIDER)
             }
         } catch (e: Exception) {
-            Log.e("ServiceGo", "SERVICEGO: ERROR - removeTestProviderNetwork")
+            KailLog.e(this, "ServiceGo", "removeTestProviderNetwork error: ${e.message}")
         }
     }
 
@@ -1031,7 +1035,7 @@ class ServiceGo : Service() {
                 mLocManager.setTestProviderEnabled(LocationManager.NETWORK_PROVIDER, true)
             }
         } catch (e: SecurityException) {
-            Log.e("ServiceGo", "SERVICEGO: ERROR - addTestProviderNetwork")
+            KailLog.e(this, "ServiceGo", "addTestProviderNetwork error: ${e.message}")
         }
     }
 
@@ -1064,7 +1068,7 @@ class ServiceGo : Service() {
 
             mLocManager.setTestProviderLocation(LocationManager.NETWORK_PROVIDER, loc)
         } catch (e: Exception) {
-            Log.e("ServiceGo", "SERVICEGO: ERROR - setLocationNetwork", e)
+            KailLog.e(this, "ServiceGo", "setLocationNetwork error: ${e.message}")
         }
     }
 

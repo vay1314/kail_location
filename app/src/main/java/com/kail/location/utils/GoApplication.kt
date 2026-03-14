@@ -4,7 +4,7 @@ import android.app.Application
 import com.baidu.location.LocationClient
 import com.baidu.mapapi.CoordType
 import com.baidu.mapapi.SDKInitializer
-import android.util.Log
+import com.kail.location.utils.KailLog
 import androidx.preference.PreferenceManager
 
 /**
@@ -69,9 +69,7 @@ class GoApplication : Application() {
             SDKInitializer.initialize(this)
             SDKInitializer.setCoordType(CoordType.BD09LL)
         } catch (e: Throwable) {
-            e.printStackTrace()
-            // 记录初始化失败日志
-            Log.e(APP_NAME, "Baidu Map SDK init failed", e)
+            KailLog.e(this, APP_NAME, "Baidu Map SDK init failed: ${e.message}")
         }
     }
 }

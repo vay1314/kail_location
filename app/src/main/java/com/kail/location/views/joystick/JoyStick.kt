@@ -8,7 +8,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.Log
+import com.kail.location.utils.KailLog
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -147,11 +147,11 @@ class JoyStick @JvmOverloads constructor(
             try {
                 initJoyStickMapView()
             } catch (e: Throwable) {
-                Log.e("JoyStick", "Error initializing MapView", e)
+                KailLog.e(mContext, "JoyStick", "Error initializing MapView: ${e.message}")
             }
             initHistoryView()
             initRouteControlView()
-            initRouteAdjustView()
+            initRouteMapView()
             
             // Start Lifecycle
             mLifecycleOwner.onCreate()
@@ -208,7 +208,7 @@ class JoyStick @JvmOverloads constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("JoyStick", "Error in show()", e)
+            KailLog.e(mContext, "JoyStick", "Error in show(): ${e.message}")
         }
     }
 
@@ -274,7 +274,7 @@ class JoyStick @JvmOverloads constructor(
                 mRouteMapView.onDestroy()
             }
         } catch (e: Exception) {
-            Log.e("JoyStick", "Error in destroy()", e)
+            KailLog.e(mContext, "JoyStick", "Error in destroy(): ${e.message}")
         }
     }
 
@@ -571,48 +571,31 @@ class JoyStick @JvmOverloads constructor(
      */
     private fun resetBaiduMap() {
         if (!this::mBaiduMap.isInitialized) {
-            Log.e("JoyStick", "mBaiduMap not initialized in resetBaiduMap")
+            KailLog.e(mContext, "JoyStick", "mBaiduMap not initialized in resetBaiduMap")
             return
         }
         try {
             mBaiduMap.clear()
-
-            val locData = MyLocationData.Builder()
-                .latitude(mCurMapLngLat.latitude)
-                .longitude(mCurMapLngLat.longitude)
-                .build()
-            mBaiduMap.setMyLocationData(locData)
-
-            val builder = MapStatus.Builder()
-            builder.target(mCurMapLngLat).zoom(18.0f)
-            mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(builder.build()))
+            mBaiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(mCurMapLngLat))
+            markBaiduMap(mCurMapLngLat)
         } catch (e: Exception) {
-            Log.e("JoyStick", "Error in resetBaiduMap", e)
+            KailLog.e(mContext, "JoyStick", "Error in resetBaiduMap: ${e.message}")
         }
     }
 
-    /**
-     * Marks a location on the Baidu Map.
-     *
-     * @param latLng The location to mark.
-     */
-    private fun markBaiduMap(latLng: LatLng) {
+    private fun markBaiduMap(ll: LatLng) {
         if (!this::mBaiduMap.isInitialized) {
-            Log.e("JoyStick", "mBaiduMap not initialized in markBaiduMap")
+            KailLog.e(mContext, "JoyStick", "mBaiduMap not initialized in markBaiduMap")
             return
         }
         try {
-            mMarkMapLngLat = latLng
-
-            val ooA = MarkerOptions().position(latLng).icon(LocationPickerActivity.mMapIndicator)
             mBaiduMap.clear()
-            mBaiduMap.addOverlay(ooA)
-
-            val builder = MapStatus.Builder()
-            builder.target(latLng).zoom(18.0f)
-            mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(builder.build()))
+            val bitmap = BitmapDescriptorFactory.fromResource(R.drawable.ic_position)
+            val option = MarkerOptions().position(ll).icon(bitmap)
+            mBaiduMap.addOverlay(option)
+            mMarkMapLngLat = ll
         } catch (e: Exception) {
-             Log.e("JoyStick", "Error in markBaiduMap", e)
+            KailLog.e(mContext, "JoyStick", "Error in markBaiduMap: ${e.message}")
         }
     }
 
@@ -706,10 +689,7 @@ class JoyStick @JvmOverloads constructor(
                 val TimeStamp = cursor.getInt(4).toLong()
                 val BD09Longitude = cursor.getString(5)
                 val BD09Latitude = cursor.getString(6)
-                Log.d(
-                    "TB",
-                    ID.toString() + "\t" + Location + "\t" + Longitude + "\t" + Latitude + "\t" + TimeStamp + "\t" + BD09Longitude + "\t" + BD09Latitude
-                )
+                KailLog.d(mContext, "TB", ID.toString() + "\t" + Location + "\t" + Longitude + "\t" + Latitude + "\t" + TimeStamp + "\t" + BD09Longitude + "\t" + BD09Latitude)
                 val bigDecimalLongitude = BigDecimal.valueOf(Longitude.toDouble())
                 val bigDecimalLatitude = BigDecimal.valueOf(Latitude.toDouble())
                 val bigDecimalBDLongitude = BigDecimal.valueOf(BD09Longitude.toDouble())
@@ -729,7 +709,7 @@ class JoyStick @JvmOverloads constructor(
             mHistoryLocationDB.close()
             mHistoryRecordsState.value = mAllRecord.toList()
         } catch (e: Exception) {
-            Log.e("JOYSTICK", "ERROR - fetchAllRecord")
+            KailLog.e(mContext, "JOYSTICK", "ERROR - fetchAllRecord")
         }
     }
 
@@ -797,8 +777,15 @@ class JoyStick @JvmOverloads constructor(
         }
     }
 
-    // Merged into initRouteControlView
-    private fun initRouteAdjustView() {
+    private fun initRouteMapView() {
+        if (!this::mRouteMapView.isInitialized) {
+            try {
+                mRouteMapView = MapView(mContext)
+                mRouteBaiduMap = mRouteMapView.map
+            } catch (e: Exception) {
+                KailLog.e(mContext, "JoyStick", "Error initializing RouteMapView: ${e.message}")
+            }
+        }
     }
 
 
