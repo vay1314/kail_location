@@ -221,7 +221,30 @@ internal object FakeLocState {
         }
     }
 
+    fun setPollOffset(offsetString: String) {
+        if (nativeLibraryLoaded) {
+            try {
+                val offset = offsetString.toLongOrNull() ?: run {
+                    if (offsetString.startsWith("0x", ignoreCase = true)) {
+                        offsetString.substring(2).toLongOrNull(16)
+                    } else {
+                        null
+                    }
+                }
+                if (offset != null) {
+                    nativeSetPollOffset(offset)
+                    android.util.Log.i("NativeHook", "Poll offset set to: $offsetString ($offset)")
+                } else {
+                    android.util.Log.e("NativeHook", "Invalid poll offset: $offsetString")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("NativeHook", "Failed to set poll offset: ${e.message}")
+            }
+        }
+    }
+
     // Native methods (implemented in C++)
+    private external fun nativeSetPollOffset(offset: Long)
     private external fun nativeSetRouteSimulation(active: Boolean, spm: Float, mode: Int)
     private external fun nativeSetGaitParams(spm: Float, mode: Int, enable: Boolean)
     private external fun nativeReloadConfig(): Boolean

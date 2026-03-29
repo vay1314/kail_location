@@ -47,7 +47,7 @@ fun SettingsScreen(
     val logEnabled by viewModel.logEnabled.collectAsState()
     val historyExpiration by viewModel.historyExpiration.collectAsState()
     val baiduMapKey by viewModel.baiduMapKey.collectAsState()
-    val nativeHookEnabled by viewModel.nativeHookEnabled.collectAsState()
+    val pollOffset by viewModel.pollOffset.collectAsState()
 
     Scaffold(
         topBar = {
@@ -161,16 +161,15 @@ fun SettingsScreen(
             )
 
             EditTextPreference(
+                title = "Sensor Poll 偏移量", // setting_poll_offset
+                value = pollOffset,
+                onValueChange = { viewModel.updateStringPreference(SettingsViewModel.KEY_POLL_OFFSET, it) }
+            )
+
+            EditTextPreference(
                 title = "历史记录有效期(天)", // setting_history_expiration
                 value = historyExpiration,
                 onValueChange = { viewModel.updateStringPreference(SettingsViewModel.KEY_HISTORY_EXPIRATION, it) }
-            )
-
-            SwitchPreference(
-                title = "启用原生传感器 Hook (Dobby)",
-                checked = nativeHookEnabled,
-                onCheckedChange = { viewModel.updateBooleanPreference(SettingsViewModel.KEY_NATIVE_HOOK_ENABLED, it) },
-                summary = "开启后将拦截并模拟底层传感器数据（如步数、加速度等）"
             )
 
             ListItem(

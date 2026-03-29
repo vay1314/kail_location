@@ -784,29 +784,35 @@ class ServiceGo : Service() {
 
         KailLog.i(this, "ServiceGo", ">>> soFile exists: ${soFile.exists()}")
         
+        // Get poll offset from settings
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        val pollOffset = prefs.getString("setting_poll_offset", "0x394a4") ?: "0x394a4"
+        KailLog.i(this, "ServiceGo", ">>> poll offset: $pollOffset")
+        
         val loadResult = portalSend("load_library") {
             putString("path", soFile.absolutePath)
+            putString("poll_offset", pollOffset)
         }
         
         KailLog.i(this, "ServiceGo", ">>> loadResult: $loadResult")
         
         // Send route simulation params after library loaded
-        // This activates the sensor hook only for route simulation
+        // Native hook is only activated when both route simulation AND step frequency simulation are enabled
         if (loadResult) {
-            if (isRouteSimulationCache) {
+            if (isRouteSimulationCache && stepEnabledCache) {
                 portalSend("set_route_simulation") {
                     putBoolean("active", true)
                     putFloat("spm", stepFreqCache.toFloat())
                     putInt("mode", 0)
                 }
-                KailLog.i(this, "ServiceGo", ">>> Native hook loaded for route simulation")
+                KailLog.i(this, "ServiceGo", ">>> Native hook loaded for route simulation (step freq enabled)")
             } else {
                 portalSend("set_route_simulation") {
                     putBoolean("active", false)
                     putFloat("spm", stepFreqCache.toFloat())
                     putInt("mode", 0)
                 }
-                KailLog.i(this, "ServiceGo", ">>> Native hook loaded but not route simulation")
+                KailLog.i(this, "ServiceGo", ">>> Native hook loaded but step freq disabled")
             }
         } else {
             KailLog.e(this, "ServiceGo", ">>> Load failed!")

@@ -32,12 +32,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         const val KEY_LOG_ENABLED = "setting_log_enabled"
         const val KEY_HISTORY_EXPIRATION = "setting_history_expiration"
         const val KEY_BAIDU_MAP_KEY = "setting_baidu_map_key"
-        const val KEY_NATIVE_HOOK_ENABLED = "setting_native_hook_enabled"
+        const val KEY_POLL_OFFSET = "setting_poll_offset"
     }
 
-    private val _nativeHookEnabled = MutableStateFlow(prefs.getBoolean(KEY_NATIVE_HOOK_ENABLED, false))
-    /** Native Hook 开关偏好的状态流。 */
-    val nativeHookEnabled: StateFlow<Boolean> = _nativeHookEnabled.asStateFlow()
+    private val _pollOffset = MutableStateFlow(prefs.getString(KEY_POLL_OFFSET, "") ?: "")
+    /** Poll 偏移量偏好的状态流。 */
+    val pollOffset: StateFlow<String> = _pollOffset.asStateFlow()
 
     private val _joystickType = MutableStateFlow(prefs.getString(KEY_JOYSTICK_TYPE, "0") ?: "0")
     /** 摇杆类型偏好的状态流。 */
@@ -104,7 +104,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             KEY_RANDOM_OFFSET -> _randomOffset.value = sharedPreferences.getBoolean(key, false)
             KEY_LOG_ENABLED -> _logEnabled.value = sharedPreferences.getBoolean(key, true)
             KEY_HISTORY_EXPIRATION -> _historyExpiration.value = sharedPreferences.getString(key, "7.0") ?: "7.0"
-            KEY_NATIVE_HOOK_ENABLED -> _nativeHookEnabled.value = sharedPreferences.getBoolean(key, false)
+            KEY_POLL_OFFSET -> _pollOffset.value = sharedPreferences.getString(key, "") ?: ""
         }
     }
 

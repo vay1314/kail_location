@@ -114,18 +114,33 @@ internal object KailCommandHandler {
             }
             "load_library" -> {
                 val path = out.getString("path") ?: return false
+                val pollOffset = out.getString("poll_offset") ?: ""
                 try {
                     val result = FakeLocState.loadNativeLibrary(path)
+                    if (result.first && pollOffset.isNotEmpty()) {
+                        FakeLocState.setPollOffset(pollOffset)
+                    }
                     out.putBoolean("ok", result.first)
                     out.putString("result", result.second)
-                    KailLog.d(null, "XPOSED", "PORTAL接收：加载SO库 path=$path result=${result.second}")
-                    // Also log to main tag for easier filtering
-                    android.util.Log.i("NativeHook", "Library load result: ${result.first}, ${result.second}")
+                    KailLog.d(null, "XPOSED", "PORTAL接收：加载SO库 path=$path offset=$pollOffset result=${result.second}")
+                    android.util.Log.i("NativeHook", "Library load result: ${result.first}, offset=$pollOffset")
                 } catch (e: Throwable) {
                     out.putBoolean("ok", false)
                     out.putString("result", e.message ?: "unknown error")
                     KailLog.e(null, "XPOSED", "PORTAL接收：加载SO库失败 path=$path error=${e.message}")
                     android.util.Log.e("NativeHook", "Library load error: ${e.message}")
+                }
+                return true
+            }
+            "set_poll_offset" -> {
+                val offset = out.getString("offset") ?: "0x394a4"
+                try {
+                    FakeLocState.setPollOffset(offset)
+                    out.putBoolean("ok", true)
+                    KailLog.d(null, "XPOSED", "PORTAL接收：设置poll偏移 offset=$offset")
+                } catch (e: Throwable) {
+                    out.putBoolean("ok", false)
+                    KailLog.e(null, "XPOSED", "PORTAL接收：设置poll偏移失败 error=${e.message}")
                 }
                 return true
             }

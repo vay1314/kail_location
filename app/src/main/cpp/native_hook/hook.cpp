@@ -24,6 +24,7 @@ typedef int (*PollFunc)(void*, void*, int);
 static PollFunc original_poll = nullptr;
 static bool hook_installed = false;
 static bool route_simulation_active = false;
+static uint64_t poll_offset = 0x394a4;
 
 void setRouteSimulationActive(bool active) {
     route_simulation_active = active;
@@ -40,19 +41,17 @@ static void process_sensor_events(void* buffer, int count) {
 
     sensors_event_t* events = static_cast<sensors_event_t*>(buffer);
 
-    ALOGD("Processing %d sensor events", count);
-
     gait::SensorSimulator::Get().ProcessSensorEvents(events, count);
 
     for (int i = 0; i < count; i++) {
         sensors_event_t& e = events[i];
 
         if (e.type == SENSOR_TYPE_STEP_COUNTER) {
-            ALOGI("     STEP_COUNTER modified: %.0f", e.data[0]);
+            ALOGI("STEP_COUNTER: %.0f", e.data[0]);
         } else if (e.type == SENSOR_TYPE_STEP_DETECTOR) {
-            ALOGI("     STEP_DETECTOR modified: %.0f", e.data[0]);
+            ALOGI("STEP_DETECTOR: %.0f", e.data[0]);
         } else if (e.type == SENSOR_TYPE_ACCELEROMETER) {
-            ALOGD("     ACCEL: %.2f %.2f %.2f", e.data[0], e.data[1], e.data[2]);
+            ALOGD("ACCEL: %.2f %.2f %.2f", e.data[0], e.data[1], e.data[2]);
         }
     }
 }
@@ -111,9 +110,9 @@ static void install_poll_hook() {
         // Placeholder to keep code compile
     }
     
-    // Use hardcoded offset directly
-    void* pollAddr = (void*)((char*)base + 0x394a4);
-    ALOGI("Using poll at %p (offset=0x394a4)", pollAddr);
+    // Use configurable offset
+    void* pollAddr = (void*)((char*)base + poll_offset);
+    ALOGI("Using poll at %p (offset=0x%lx)", pollAddr, poll_offset);
     
     int ret = DobbyHook(pollAddr, (void*)hooked_poll, (void**)&original_poll);
     
@@ -126,6 +125,16 @@ static void install_poll_hook() {
 }
 
 extern "C" {
+
+JNIEXPORT void JNICALL 
+Java_com_kail_location_xposed_FakeLocState_nativeSetPollOffset(
+    JNIEnv* env, 
+    jclass clazz, 
+    jlong offset
+) {
+    poll_offset = (uint64_t)offset;
+    ALOGI("JNI: Set poll offset: 0x%lx", poll_offset);
+}
 
 JNIEXPORT void JNICALL 
 Java_com_kail_location_xposed_FakeLocState_nativeSetRouteSimulation(
