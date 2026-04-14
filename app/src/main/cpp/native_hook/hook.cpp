@@ -42,8 +42,6 @@ static int mSensorHandleStepDetector = -1;
 static int mSensorHandleStepCounter = -1;
 static int isMocking = 0;
 static int isAuthorized = 0;
-static int64_t last_type5_time = 0;
-static int type5_count = 0;
 static float current_spm = 120.0f;
 static int step_event_counter = 0;
 
@@ -137,10 +135,6 @@ extern "C" void hooked_convert_to_sensor_event(void* param_1, void* param_2) {
     }
 
     int sensor_type = *(int*)((char*)param_2 + 0x08);
-//    ALOGI("convertToSensorEvent: type=%d", sensor_type);
-//    ALOGI("vars: SDT=%d, SSD=%d, SCT=%d, SSC=%d, isMocking=%d",
-//        stepdetectorTrigger, mSensorHandleStepDetector,
-//        stepcounterTrigger, mSensorHandleStepCounter, isMocking);
 
     if (sensor_type == SENSOR_TYPE_STEP_DETECTOR) {
         stepdetectorTrigger = 1;
@@ -151,20 +145,6 @@ extern "C" void hooked_convert_to_sensor_event(void* param_1, void* param_2) {
         mSensorHandleStepCounter = *(int*)((char*)param_2 + 0x04);
 //        ALOGI("Got STEP_COUNTER: handle=%d", mSensorHandleStepCounter);
     } else if (sensor_type == 5) {
-        if (last_type5_time == 0) {
-            last_type5_time = *(int64_t*)((char*)param_2 + 0x10);
-        }
-        type5_count++;
-        
-        if (type5_count >= 10) {
-            int64_t now = *(int64_t*)((char*)param_2 + 0x10);
-            int64_t diff_us = now - last_type5_time;
-            double diff_sec = diff_us / 1000000.0;
-            type5_count = 0;
-            last_type5_time = now;
-//            ALOGI("type=5 count: %d, time: %.1f sec", type5_count, diff_sec);
-        }
-        
         if (mSensorHandleStepDetector == -1) {
             mSensorHandleStepDetector = 0;
         }

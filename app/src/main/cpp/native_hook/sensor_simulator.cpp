@@ -46,7 +46,7 @@ void SensorSimulator::UpdateParams(float spm, int mode, bool enable) {
     if (spm > 300.0f) spm = 300.0f;
     
     target_spm_ = spm;
-    ALOGI("Updated params: spm=%.2f, mode=%d, enable=%d", spm, mode, enable ? 1 : 0);
+//    ALOGI("Updated params: spm=%.2f, mode=%d, enable=%d", spm, mode, enable ? 1 : 0);
 }
 
 GaitConfig SensorSimulator::GetConfig() const {
