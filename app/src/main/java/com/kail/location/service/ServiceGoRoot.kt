@@ -194,6 +194,7 @@ class ServiceGoRoot : Service() {
                             if (this::mJoystickManager.isInitialized) {
                                 mJoystickManager.setRoutePauseState(false)
                             }
+                            portalSend("set_step_enabled") { putBoolean("enabled", stepEnabledCache) }
                             broadcastStatus()
                             KailLog.log(this, "ServiceGoRoot", "Resumed simulation (isStop=false)", isHighFrequency = false)
                         } catch (e: Exception) {
