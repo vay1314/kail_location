@@ -57,4 +57,6 @@ TVvudxmNTwzRFe3z7ts9srZE1srkqXgmxm
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
 
 
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnoellegazelle6%2Fkail_location.svg?type=large&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnoellegazelle6%2Fkail_location?ref=badge_large&issueType=license)
+
 
