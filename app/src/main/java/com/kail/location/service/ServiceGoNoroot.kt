@@ -276,6 +276,13 @@ class ServiceGoNoroot : Service() {
         } else {
             try {
                 initNotification()
+                if (mNotification != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        startForeground(SERVICE_GO_NOTE_ID, mNotification!!, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+                    } else {
+                        startForeground(SERVICE_GO_NOTE_ID, mNotification!!)
+                    }
+                }
             } catch (e: Exception) {
                 KailLog.e(this, "ServiceGoNoroot", "Error in onStartCommand initNotification: ${e.message}")
             }
