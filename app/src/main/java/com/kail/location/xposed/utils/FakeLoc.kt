@@ -101,11 +101,11 @@ object FakeLoc {
     @Volatile var lastLocation: Location? = null
 
     var latitude: Double
-        get() = FakeLocState.injectInto(null)?.latitude ?: 0.0
+        get() = FakeLocState.getLatitude()
         set(value) { }
 
     var longitude: Double
-        get() = FakeLocState.injectInto(null)?.longitude ?: 0.0
+        get() = FakeLocState.getLongitude()
         set(value) { }
 
     var altitude: Double

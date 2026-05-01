@@ -12,7 +12,12 @@ import com.kail.location.nmea.NmeaValue
 import kotlin.random.Random
 
 abstract class BaseLocationHook: BaseDivineService() {
+    private val injecting = ThreadLocal<Boolean>()
+
     fun injectLocation(originLocation: Location, realLocation: Boolean = true): Location {
+        if (injecting.get() == true) return originLocation
+        injecting.set(true)
+        try {
         if (realLocation) {
             if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     originLocation.provider == LocationManager.GPS_PROVIDER && originLocation.isComplete
@@ -125,6 +130,9 @@ abstract class BaseLocationHook: BaseDivineService() {
         }
 
         return location
+        } finally {
+            injecting.set(false)
+        }
     }
 
     fun injectNMEA(nmeaStr: String): String? {

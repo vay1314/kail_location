@@ -223,6 +223,9 @@ internal object FakeLocState {
         }
     }
 
+    fun getLatitude(): Double = locationRef.get()?.latitude ?: 0.0
+    fun getLongitude(): Double = locationRef.get()?.longitude ?: 0.0
+
     fun updateLocation(lat: Double, lon: Double) {
         val loc = Location(LocationManager.GPS_PROVIDER)
         loc.latitude = lat
